@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Royal Print | Print Shop Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23141b4d'/%3E%3Cpath d='M4 17h16l1.2-9-4.7 3.7L12 5 7.5 11.7 2.8 8z' fill='%23c99a2e'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f6fb;--panel:#fff;--ink:#141b4d;--mute:#566079;--line:#dcdff0;--c:#2b3a9e;--m:#c8283c;--y:#c99a2e;--ok:#1b8a5a;--bad:#c62828;--sh:0 1px 2px rgba(20,27,77,.08);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0c1033;--panel:#151b4a;--ink:#e9ebfa;--mute:#a2a9cf;--line:#2b3170;--sh:none}}
+:root[data-theme="dark"]{--bg:#0c1033;--panel:#151b4a;--ink:#e9ebfa;--mute:#a2a9cf;--line:#2b3170;--sh:none}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.55 "IBM Plex Sans",Arial,sans-serif;min-height:100vh}
+.app{display:grid;grid-template-columns:220px 1fr;min-height:100vh}
+nav{background:#141b4d;color:#fff;padding:20px 14px;position:sticky;top:0;height:100vh}
+.brand{font-weight:700;font-size:19px;margin-bottom:4px}
+.reg{display:flex;gap:4px;margin:6px 0 22px}.reg i{width:22px;height:6px;border-radius:2px}
+.reg i:nth-child(1){background:var(--c)}.reg i:nth-child(2){background:var(--m)}.reg i:nth-child(3){background:var(--y)}.reg i:nth-child(4){background:#fff}
+nav button{display:block;width:100%;text-align:start;background:none;border:0;color:#b9c0ee;padding:10px 12px;border-radius:8px;font:inherit;cursor:pointer;margin-bottom:2px}
+nav button:hover{background:rgba(255,255,255,.08)}nav button.on{background:#fff;color:#141b4d;font-weight:600}
+nav .sp{height:18px}
+main{padding:24px;max-width:1100px;width:100%}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}.sub{color:var(--mute);margin:0 0 20px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:var(--sh);padding:18px;margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;border-inline-start:5px solid var(--c)}
+.kpi:nth-child(2){border-color:var(--y)}.kpi:nth-child(3){border-color:var(--m)}.kpi:nth-child(4){border-color:var(--ok)}
+.kpi b{display:block;font-size:26px;line-height:1.3}.kpi span{color:var(--mute);font-size:13px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th,td{padding:10px 12px;text-align:start;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--mute);font-size:13px}tr:hover td{background:rgba(0,149,182,.05)}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--c);outline-offset:1px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.btn{background:var(--c);color:#fff;border:0;border-radius:8px;padding:9px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--line)}.btn.d{background:var(--bad)}.btn.s{padding:5px 10px;font-size:13px}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:600}
+.s-new{background:#e3f2fd;color:#0d47a1}.s-prod{background:#fff3cd;color:#7a5a00}.s-ready{background:#e0f5ea;color:#13633f}.s-done{background:#e6e9ee;color:#46515f}.s-late{background:#fde4e4;color:#a11b1b}
+.search{max-width:280px}
+.modal{position:fixed;inset:0;background:rgba(10,20,35,.55);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50}
+.modal.open{display:flex}.box{background:var(--panel);border-radius:12px;padding:22px;width:100%;max-width:640px}
+.mut{color:var(--mute)}.neg{color:var(--bad);font-weight:600}.pos{color:var(--ok);font-weight:600}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.res div{background:var(--bg);border-radius:8px;padding:10px 12px}.res b{display:block;font-size:19px}
+.inv{background:#fff;color:#111;padding:26px;border-radius:6px}.inv table{min-width:0}.inv th{color:#555}
+.empty{padding:26px;text-align:center;color:var(--mute)}
+@media(max-width:780px){.app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px;padding:12px}.brand,.reg{width:100%;margin:0}nav button{width:auto}nav .sp{display:none}main{padding:14px}}
+@media print{body{background:#fff}.noprint{display:none!important}.app{display:none}.modal{position:static;display:none;padding:0;background:none}.modal.print{display:block}.box{max-width:none;padding:0}}
+[hidden]{display:none!important}
+body.locked .app{display:none}
+#auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.acard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:28px;width:100%;max-width:380px;box-shadow:var(--sh)}
+.acard .reg{margin-bottom:16px}
+.kan{display:grid;grid-template-columns:repeat(4,minmax(230px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.kcol{border:1px dashed var(--line);border-radius:10px;padding:10px;min-height:220px}.kcol h2{font-size:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:8px;box-shadow:var(--sh)}.card.lt{border-inline-start:4px solid var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}.chip{background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:4px 12px}
+.chip button{border:0;background:none;color:var(--bad);cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 4px}
+.bars{display:flex;gap:10px;height:170px}.bar1{display:flex;flex-direction:column;flex:1;height:100%;align-items:center;font-size:12px;color:var(--mute)}
+.col{flex:1;width:100%;display:flex;align-items:flex-end}.col i{width:100%;background:var(--c);border-radius:4px 4px 0 0;min-height:2px}
+.two{display:grid;grid-template-columns:2fr 1fr;gap:16px}@media(max-width:780px){.two{grid-template-columns:1fr}}
+#rb:not(:empty){background:var(--m);color:#fff;border-radius:99px;padding:0 7px;font-size:12px;margin-inline-start:4px}
+.modal.wide .box{max-width:1000px}.pbar{display:inline-block;vertical-align:middle;width:80px;height:8px;background:var(--line);border-radius:4px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--ok)}
+@media print{.tw{overflow:visible}}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--c:#5a68e6;--y:#e0b64a;--m:#ff6577;--deep:#0a0d2e}}
+:root[data-theme="dark"]{--c:#5a68e6;--y:#e0b64a;--m:#ff6577;--deep:#0a0d2e}
+:root{--deep:#141b4d;--gold:#c99a2e}
+h1,h2,h3,.brand{font-family:"Fraunces","IBM Plex Sans Arabic",Georgia,serif}
+[dir="rtl"] h1,[dir="rtl"] h2,[dir="rtl"] h3,[dir="rtl"] .brand{font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif}
+.crown{width:24px;height:24px;fill:var(--gold);flex:none}
+body{font-size:14.5px}
+nav{background:var(--deep)}
+nav .brand{color:#fff}.acard .brand{color:var(--ink)}
+.brand{font-size:22px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+nav button{color:#b9c0ee;border-radius:6px;border-inline-start:3px solid transparent;padding:9px 12px}
+nav button:hover{background:rgba(255,255,255,.07)}
+nav button.on{background:rgba(255,255,255,.1);color:#fff;border-inline-start-color:var(--gold);font-weight:600}
+h1{font-size:30px;font-weight:600;letter-spacing:-.015em}h2{font-weight:600}
+.sub{max-width:70ch}
+.panel,.kpi,.box{border-radius:12px}
+.kpi,.kpi:nth-child(n){border:1px solid var(--line);border-top:3px solid var(--c)}
+.kpi:nth-child(2){border-top-color:var(--y)}.kpi:nth-child(3){border-top-color:var(--m)}.kpi:nth-child(4){border-top-color:var(--ok)}
+.kpi{padding:16px 18px}.kpi b{font-family:Fraunces,Georgia,serif;font-size:32px;font-weight:600;letter-spacing:-.01em}
+th{background:rgba(43,58,158,.06);color:var(--ink);font-size:12.5px;font-weight:600}
+td{font-variant-numeric:tabular-nums}
+.btn{border-radius:8px}.btn:hover{filter:brightness(1.08)}
+.tag{font-weight:600}
+#auth{background:var(--deep)}
+.acard{border:0;border-radius:16px;padding:32px;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.acard h2{font-size:24px;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="app">
+<nav>
+ <div class="brand"><svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l1.5-11-5.5 4.5L12 4 7 11.5 1.5 7z"/><rect x="3" y="19.5" width="18" height="2.2" rx="1"/></svg>Royal Print</div>
+ <div class="reg"><i></i><i></i><i></i><i></i></div>
+ <button data-v="dash" class="on">Dashboard</button>
+ <button data-v="orders">Orders</button>
+ <button data-v="board">Production board</button>
+ <button data-v="cust">Customers</button>
+ <button data-v="reqs">Requests <b id="rb"></b></button>
+ <button data-v="catalog">Product catalog</button>
+ <button data-v="reports">Reports</button>
+ <button data-v="price">Price calculator</button>
+ <button data-v="sizes">Size library</button>
+ <button data-v="users" id="nu" hidden>Users</button>
+ <div class="sp"></div>
+ <button id="theme">Dark mode</button>
+ <button id="bk">Export backup</button>
+ <button id="rs">Restore backup</button>
+ <div id="who" style="padding:10px 12px 4px;color:#a2a9cf;font-size:13px"></div>
+ <div id="sy" style="padding:0 12px 8px;font-size:12px;color:#a2a9cf"></div>
+ <button id="lo">Log out</button>
+</nav>
+<main id="main"></main>
+</div>
+<div class="modal" id="modal"><div class="box" id="box"></div></div>
+<input type="file" id="file" accept=".json" hidden>
+<div id="auth" hidden></div>
+<script>
+const TYPES=["Sticker","Acetate","Thermal barcode","Hang tag","Care label","Carton label"];
+const DEF={cust:[],orders:[],seq:1,setup:150,min:200,
+ rates:{"Sticker":0.012,"Acetate":0.02,"Thermal barcode":0.008,"Hang tag":0.015,"Care label":0.018,"Carton label":0.01},
+ mats:{"Art paper":1,"Glossy coated":1.1,"Matte coated":1.1,"Thermal paper":0.9,"Kraft":1.2,"Cardboard 300g":1.25,"Satin":1.3,"PP synthetic":1.4,"PVC vinyl":1.5,"Transparent":1.6},
+ cols:{"1 color":0.8,"2 colors":0.9,"CMYK":1,"CMYK + spot":1.2},
+ fin:{"None":0,"Varnish":0.08,"Die-cut":0.1,"Numbering / variable data":0.12,"Lamination":0.15,"Foil":0.3},
+ sizes:{"Sticker":[[3,2],[3,3],[4,4],[5,3],[5,5],[7,5],[10,5],[10,10]],
+  "Acetate":[[5,3],[6,4],[8,5],[10,6],[10,10],[15,10]],
+  "Thermal barcode":[[5,2.5],[6,4],[10,5],[10,7.5],[10,10],[10,15]],
+  "Hang tag":[[4,9],[5,9],[5,10],[6,10],[6,12],[7,15]],
+  "Care label":[[3,6],[4,8],[5,10]],
+  "Carton label":[[10,10],[10,15],[15,10],[15,15],[20,10],[20,15]]}};
+const ST={new:["New","s-new"],prod:["In production","s-prod"],ready:["Ready","s-ready"],done:["Delivered","s-done"]};
+const KEY="ceaser_labels_v1";
+const clone=o=>JSON.parse(JSON.stringify(o));
+let S=clone(DEF);
+function norm(){S.reqs=S.reqs||[];
+ for(const k of ["rates","mats","cols","fin","sizes"])S[k]=Object.assign(clone(DEF[k]),S[k]);
+ delete S.rates["Garment tag"];delete S.sizes["Garment tag"];
+ S.orders.forEach(o=>{if(o.type==="Garment tag")o.type="Hang tag"});
+}
+try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+norm();
+const save=()=>{S.orders.forEach(o=>{if(o.status==="done"){if(!o.sentAt)o.sentAt=today()}else delete o.sentAt});S._v=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}push()};
+const $=(s,r=document)=>r.querySelector(s);
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money=n=>"EGP "+Number(n||0).toLocaleString("en-US",{maximumFractionDigits:2});
+const num=n=>Number(n).toLocaleString("en-US");
+const today=()=>new Date().toISOString().slice(0,10);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const cname=id=>(S.cust.find(c=>c.id===id)||{name:"-"}).name;
+const late=o=>o.status!=="done"&&o.status!=="ready"&&o.due&&o.due<today();
+const VAT=0.14,tierD=q=>q>=50000?.15:q>=10000?.1:q>=5000?.05:0;
+const calc=(type,w,h,q,mat,col,fin)=>{const unit=Math.max(0,w*h*(S.rates[type]||0)*(S.mats[mat]||1)*(S.cols[col]||1)*(1+(S.fin[fin]||0)));const t=tierD(q);return{unit,tier:t,total:Math.max((unit*q+S.setup)*(1-t),S.min)}};
+let view="dash",q="",fs="all";
+
+function tag(o){if(late(o))return'<span class="tag s-late">Overdue</span>';const [t,c]=ST[o.status];return`<span class="tag ${c}">${t}</span>`}
+
+const monthKey=d=>(d||"").slice(0,7);
+const prBadge=o=>o.pri==="urgent"?' <span class="tag s-late">Urgent</span>':"";
+const opts=(a,sel)=>a.map(k=>`<option ${k===sel?"selected":""}>${esc(k)}</option>`).join("");
+const tid=t=>t.replace(/\W/g,"");
+const byPri=(a,b)=>(a.pri==="urgent"?0:1)-(b.pri==="urgent"?0:1)||(a.due||"9").localeCompare(b.due||"9");
+
+function dash0(){
+ const t=today(),act=S.orders.filter(o=>o.status!=="done");
+ const rev=S.orders.reduce((a,o)=>a+o.total,0),paid=S.orders.reduce((a,o)=>a+o.paid,0);
+ const dueToday=act.filter(o=>o.due===t),lates=act.filter(late);
+ const rows=[...act].sort(byPri).slice(0,8);
+ const months=[];for(let i=5;i>=0;i--){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-i);months.push(d.toISOString().slice(0,7))}
+ const mv=months.map(m=>S.orders.filter(o=>monthKey(o.date)===m).reduce((a,o)=>a+o.total,0)),mx=Math.max(...mv,1);
+ const top=S.cust.map(c=>({n:c.name,t:S.orders.filter(o=>o.cid===c.id).reduce((a,o)=>a+o.total,0)})).filter(x=>x.t>0).sort((a,b)=>b.t-a.t).slice(0,5);
+ return`<h1>Dashboard</h1><p class="sub">Today at a glance</p>
+ <div class="kpis"><div class="kpi"><b>${act.length}</b><span>Active orders</span></div>
+ <div class="kpi"><b>${dueToday.length}</b><span>Due today</span></div>
+ <div class="kpi"><b class="${lates.length?"neg":""}">${lates.length}</b><span>Overdue orders</span></div>
+ <div class="kpi"><b>${money(rev-paid)}</b><span>Outstanding balance</span></div></div>
+ <div class="two"><div class="panel"><h2>Orders value, last 6 months (EGP)</h2><div class="bars">${months.map((m,i)=>`<div class="bar1"><div class="col"><i style="height:${Math.round(mv[i]/mx*100)}%"></i></div><b>${num(Math.round(mv[i]))}</b><span>${m.slice(5)}/${m.slice(2,4)}</span></div>`).join("")}</div></div>
+ <div class="panel"><h2>Top customers</h2>${top.length?top.map(x=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)"><span>${esc(x.n)}</span><b>${money(x.t)}</b></div>`).join(""):'<div class="mut">No data yet.</div>'}</div></div>
+ <div class="panel"><h2>Next deliveries</h2>${rows.length?`<div class="tw"><table><tr><th>No.</th><th>Customer</th><th>Type</th><th>Qty</th><th>Due</th><th>Status</th></tr>${rows.map(o=>`<tr><td>#${o.no}</td><td>${esc(cname(o.cid))}${prBadge(o)}</td><td>${esc(o.type)}</td><td>${num(o.qty)}</td><td>${o.due||"-"}</td><td>${tag(o)}</td></tr>`).join("")}</table></div>`:'<div class="empty">No active orders. Add one from the Orders page.</div>'}</div>
+ <div class="panel"><h2>Revenue</h2><div class="res" style="margin:0"><div><span class="mut">Total ordered</span><b>${money(rev)}</b></div><div><span class="mut">Collected</span><b class="pos">${money(paid)}</b></div><div><span class="mut">Customers</span><b>${S.cust.length}</b></div></div></div>`;
+}
+
+function orders(){
+ const ql=q.toLowerCase();
+ let l=S.orders.filter(o=>(fs==="all"||(fs==="late"?late(o):o.status===fs))&&(!q||(cname(o.cid)+o.type+o.no+(o.mat||"")+(o.notes||"")).toLowerCase().includes(ql)));
+ l=[...l].sort((a,b)=>b.no-a.no);
+ return`<h1>Orders</h1><p class="sub">All print jobs and their status</p>
+ <div class="bar noprint"><button class="btn" onclick="orderForm()">+ New order</button>
+ <input class="search" placeholder="Search customer, type or no." value="${esc(q)}" oninput="q=this.value;go(1)" id="qs">
+ <select style="width:auto" onchange="fs=this.value;go()"><option value="all">All statuses</option>${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${fs===k?"selected":""}>${v[0]}</option>`).join("")}<option value="late" ${fs==="late"?"selected":""}>Overdue</option></select>
+ <button class="btn g" style="margin-inline-start:auto" onclick="csv()">Export CSV</button></div>
+ <div class="panel tw">${l.length?`<table><tr><th>No.</th><th>Customer</th><th>Job</th><th>Size</th><th>Qty</th><th>Total</th><th>Balance</th><th>Due</th><th>Status</th><th></th></tr>${l.map(o=>`<tr><td>#${o.no}</td><td>${esc(cname(o.cid))}${prBadge(o)}</td><td>${esc(o.type)}<div class="mut" style="font-size:12px">${esc(o.mat||"")}${o.col?" · "+esc(o.col):""}</div></td><td>${o.w}×${o.h} cm</td><td>${num(o.qty)}</td><td>${money(o.total)}</td><td class="${o.total-o.paid>0?"neg":"pos"}">${money(o.total-o.paid)}</td><td>${o.due||"-"}</td><td>${tag(o)}</td><td><button class="btn g s" onclick="pay('${o.id}')">Pay</button> <button class="btn g s" onclick="invoice('${o.id}')">Invoice</button> <button class="btn g s" onclick="orderForm('${o.id}')">Edit</button></td></tr>`).join("")}</table>`:'<div class="empty">No matching orders.</div>'}</div>`;
+}
+
+function board(){
+ return`<h1>Production board</h1><p class="sub">Move jobs through the shop floor. Urgent jobs and earliest deadlines come first.</p><div class="kan">${Object.entries(ST).map(([k,v],i)=>{const l=S.orders.filter(o=>o.status===k).sort(byPri);
+ return`<div class="kcol"><h2>${v[0]} <span class="mut">${l.length}</span></h2>${l.map(o=>`<div class="card ${late(o)?"lt":""}"><b>#${o.no} · ${esc(cname(o.cid))}</b>${prBadge(o)}<div class="mut">${esc(o.type)} ${o.w}×${o.h} cm · ${num(o.qty)}</div><div class="mut">Due: ${o.due||"-"}</div><div class="bar" style="margin:8px 0 0;gap:6px">${i>0?`<button class="btn g s" onclick="mv('${o.id}',-1)">‹ Back</button>`:""}${i<3?`<button class="btn s" onclick="mv('${o.id}',1)">Next ›</button>`:""}<button class="btn g s" onclick="orderForm('${o.id}')">Edit</button></div></div>`).join("")||'<div class="mut">Empty</div>'}</div>`}).join("")}</div>`;
+}
+function mv(id,d){const k=Object.keys(ST),o=S.orders.find(x=>x.id===id);o.status=k[Math.min(3,Math.max(0,k.indexOf(o.status)+d))];save();render()}
+
+function cust(){
+ const l=S.cust.filter(c=>!q||(c.name+c.phone).toLowerCase().includes(q.toLowerCase()));
+ return`<h1>Customers</h1><p class="sub">Contacts and account balances</p>
+ <div class="bar noprint"><button class="btn" onclick="custForm()">+ New customer</button><input class="search" placeholder="Search name or phone" value="${esc(q)}" oninput="q=this.value;go(1)" id="qs"></div>
+ <div class="panel tw">${l.length?`<table><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Orders</th><th>Total business</th><th>Balance</th><th></th></tr>${l.map(c=>{const os=S.orders.filter(o=>o.cid===c.id),t=os.reduce((a,o)=>a+o.total,0),p=os.reduce((a,o)=>a+o.paid,0);return`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||"")}</td><td>${esc(c.addr||"")}</td><td>${os.length}</td><td>${money(t)}</td><td class="${t-p>0?"neg":"pos"}">${money(t-p)}</td><td><button class="btn g s" onclick="custForm('${c.id}')">Edit</button>${isAdmin()?` <button class="btn d s" onclick="custDel('${c.id}')">Delete</button>`:""}</td></tr>`}).join("")}</table>`:'<div class="empty">No customers yet. Add your first one.</div>'}</div>`;
+}
+
+function sizeOpts(type,w,h){const l=S.sizes[type]||[],cur=l.findIndex(s=>s[0]==w&&s[1]==h);
+ return`<option value="c" ${cur<0?"selected":""}>Custom size</option>`+l.map((s,i)=>`<option value="${i}" ${i===cur?"selected":""}>${s[0]} × ${s[1]} cm</option>`).join("")}
+
+function price(){
+ const adm=isAdmin(),mk=(o,name,div)=>Object.keys(o).map(k=>`<div><label>${esc(k)}</label><input type="number" step="0.01" value="${div?Math.round(o[k]*100):o[k]}" onchange="S.${name}['${k}']=${div?"(+this.value)/100":"+this.value"};save();pc()"></div>`).join("");
+ return`<h1>Price calculator</h1><p class="sub">Unit = width × height × type rate × material × colors × (1 + finish). Quantity discounts: 5% from 5,000, 10% from 10,000, 15% from 50,000.</p>
+ <div class="panel"><div class="grid">
+ <div><label>Type</label><select id="pt" onchange="pType()">${opts(TYPES)}</select></div>
+ <div><label>Size preset</label><select id="ps" onchange="pSize()">${sizeOpts(TYPES[0],5,3)}</select></div>
+ <div><label>Width (cm)</label><input id="pw" type="number" step="0.1" value="5" oninput="pCust()"></div>
+ <div><label>Height (cm)</label><input id="ph" type="number" step="0.1" value="3" oninput="pCust()"></div>
+ <div><label>Quantity</label><input id="pq" type="number" value="1000" oninput="pc()"></div>
+ <div><label>Material</label><select id="pm" onchange="pc()">${opts(Object.keys(S.mats))}</select></div>
+ <div><label>Colors</label><select id="pk" onchange="pc()">${opts(Object.keys(S.cols),"CMYK")}</select></div>
+ <div><label>Finish</label><select id="pf" onchange="pc()">${opts(Object.keys(S.fin))}</select></div></div>
+ <div class="res" id="pr"></div></div>
+ ${adm?`<div class="panel"><h2>Rates (admin)</h2><p class="mut" style="margin-top:0">Placeholder values. Replace them with your real prices.</p><div class="grid">${TYPES.map(t=>`<div><label>${t} (EGP / cm²)</label><input type="number" step="0.001" value="${S.rates[t]}" onchange="S.rates['${t}']=+this.value;save();pc()"></div>`).join("")}
+ <div><label>Machine setup (EGP)</label><input type="number" value="${S.setup}" onchange="S.setup=+this.value;save();pc()"></div>
+ <div><label>Minimum order (EGP)</label><input type="number" value="${S.min}" onchange="S.min=+this.value;save();pc()"></div></div>
+ <h2 style="margin-top:18px">Material multipliers</h2><div class="grid">${mk(S.mats,"mats",0)}</div>
+ <h2 style="margin-top:18px">Color multipliers</h2><div class="grid">${mk(S.cols,"cols",0)}</div>
+ <h2 style="margin-top:18px">Finish extra cost (%)</h2><div class="grid">${mk(S.fin,"fin",1)}</div></div>`:""}`;
+}
+function pType(){const t=$("#pt").value;$("#ps").innerHTML=sizeOpts(t,+$("#pw").value,+$("#ph").value);pc()}
+function pSize(){const v=$("#ps").value;if(v!=="c"){const s=S.sizes[$("#pt").value][+v];$("#pw").value=s[0];$("#ph").value=s[1]}pc()}
+function pCust(){$("#ps").innerHTML=sizeOpts($("#pt").value,+$("#pw").value,+$("#ph").value);pc()}
+function pc(){const e=$("#pr");if(!e)return;const w=+$("#pw").value||0,h=+$("#ph").value||0,n=+$("#pq").value||0,r=calc($("#pt").value,w,h,n,$("#pm").value,$("#pk").value,$("#pf").value);
+ e.innerHTML=`<div><span class="mut">Unit price</span><b>EGP ${r.unit.toFixed(3)}</b></div><div><span class="mut">Quantity discount</span><b>${Math.round(r.tier*100)}%</b></div><div><span class="mut">Total</span><b>${money(r.total)}</b></div><div><span class="mut">Total + 14% VAT</span><b>${money(r.total*(1+VAT))}</b></div><div><span class="mut">Per 1,000</span><b>${money(n?r.total/n*1000:0)}</b></div>`}
+
+function sizes(){
+ const adm=isAdmin();
+ return`<h1>Size library</h1><p class="sub">Common sizes per product. They show up as presets in orders and in the calculator.</p>${TYPES.map(t=>`<div class="panel"><h2>${t}</h2><div class="chips">${(S.sizes[t]||[]).map((s,i)=>`<span class="chip">${s[0]} × ${s[1]} cm${adm?` <button title="Remove" onclick="szDel('${t}',${i})">×</button>`:""}</span>`).join("")||'<span class="mut">No sizes yet</span>'}</div>${adm?`<div class="bar" style="margin:12px 0 0"><input id="sw-${tid(t)}" type="number" step="0.1" placeholder="Width cm" style="width:120px"><input id="sh-${tid(t)}" type="number" step="0.1" placeholder="Height cm" style="width:120px"><button class="btn s" onclick="szAdd('${t}')">Add size</button></div>`:""}</div>`).join("")}`;
+}
+function szAdd(t){if(!isAdmin())return;const w=+$("#sw-"+tid(t)).value,h=+$("#sh-"+tid(t)).value;if(!(w>0&&h>0))return;
+ const l=S.sizes[t]=S.sizes[t]||[];if(!l.some(s=>s[0]===w&&s[1]===h))l.push([w,h]);l.sort((a,b)=>a[0]*a[1]-b[0]*b[1]);save();render()}
+function szDel(t,i){if(!isAdmin())return;S.sizes[t].splice(i,1);save();render()}
+
+function render(){
+ $("#main").innerHTML={dash,orders,board,cust,price,sizes,users,reqs,reports,catalog}[view]();
+ document.querySelectorAll("nav [data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===view));
+ if(view==="price")pc();
+}
+function go(keepFocus){render();if(keepFocus){const i=$("#qs");if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length)}}}
+function open(h,cls){$("#box").innerHTML=h;$("#modal").className="modal open"+(cls?" "+cls:"")}
+function close(){$("#modal").className="modal"}
+
+function custForm(id){
+ const c=S.cust.find(x=>x.id===id)||{name:"",phone:""};
+ open(`<h2>${id?"Edit customer":"New customer"}</h2><div class="grid"><div><label>Name</label><input id="cn" value="${esc(c.name)}"></div><div><label>Phone</label><input id="cp" value="${esc(c.phone)}"></div><div><label>Email</label><input id="ce" value="${esc(c.email||"")}"></div><div><label>Address / company</label><input id="ca" value="${esc(c.addr||"")}"></div></div>
+ <div class="bar" style="margin:16px 0 0"><button class="btn" onclick="custSave('${id||""}')">Save customer</button><button class="btn g" onclick="close()">Cancel</button>${id&&isAdmin()?`<button class="btn d" style="margin-inline-start:auto" onclick="custDel('${id}')">Delete</button>`:""}</div>`);
+}
+function custSave(id){const n=$("#cn").value.trim();if(!n){$("#cn").focus();return}
+ if(id){const c=S.cust.find(x=>x.id===id);c.name=n;c.phone=$("#cp").value.trim();c.email=$("#ce").value.trim();c.addr=$("#ca").value.trim()}else S.cust.push({id:uid(),name:n,phone:$("#cp").value.trim(),email:$("#ce").value.trim(),addr:$("#ca").value.trim()});
+ save();close();render()}
+function custDel(id){
+ if(!isAdmin())return;const c=S.cust.find(x=>x.id===id);if(!c)return;const n=S.orders.filter(o=>o.cid===id).length;
+ if(!confirm(n?`Delete "${c.name}" AND their ${n} order${n>1?"s":""}? This cannot be undone. Tip: use Export backup first.`:`Delete "${c.name}"?`))return;
+ S.orders=S.orders.filter(o=>o.cid!==id);S.cust=S.cust.filter(x=>x.id!==id);save();close();render()}
+
+function orderForm(id){
+ if(!S.cust.length){alert("Add a customer first from the Customers page.");return}
+ const o=S.orders.find(x=>x.id===id)||{cid:S.cust[0].id,type:TYPES[0],w:5,h:3,qty:1000,total:0,paid:0,status:"new",due:"",notes:""};
+ const mat=o.mat||"Art paper",col=o.col||"CMYK",fin=o.fin||"None";
+ open(`<h2>${id?"Edit order #"+o.no:"New order"}</h2><div class="grid">
+ <div><label>Customer</label><select id="oc">${S.cust.map(c=>`<option value="${c.id}" ${c.id===o.cid?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
+ <div><label>Product name (optional)</label><input id="opn" list="pl" value="${esc(o.prod||'')}"><datalist id="pl">${PN.map(x=>`<option>${x}</option>`).join("")}</datalist></div>
+ <div><label>Type</label><select id="ot" onchange="oType()">${opts(TYPES,o.type)}</select></div>
+ <div><label>Size preset</label><select id="osz" onchange="oSize()">${sizeOpts(o.type,o.w,o.h)}</select></div>
+ <div><label>Width (cm)</label><input id="ow" type="number" step="0.1" value="${o.w}" oninput="oCust()"></div>
+ <div><label>Height (cm)</label><input id="oh" type="number" step="0.1" value="${o.h}" oninput="oCust()"></div>
+ <div><label>Quantity</label><input id="oq" type="number" value="${o.qty}" oninput="oAuto()"></div>
+ <div><label>Material</label><select id="om" onchange="oAuto()">${opts(Object.keys(S.mats),mat)}</select></div>
+ <div><label>Colors</label><select id="ok" onchange="oAuto()">${opts(Object.keys(S.cols),col)}</select></div>
+ <div><label>Finish</label><select id="of" onchange="oAuto()">${opts(Object.keys(S.fin),fin)}</select></div>
+ <div><label>Extra discount (%)</label><input id="odc" type="number" min="0" max="100" step="0.5" value="${o.disc||0}" oninput="oAuto()"></div>
+ <div><label>Priority</label><select id="opr"><option value="normal" ${o.pri!=="urgent"?"selected":""}>Normal</option><option value="urgent" ${o.pri==="urgent"?"selected":""}>Urgent</option></select></div>
+ <div style="display:flex;align-items:end"><label style="display:flex;gap:8px;align-items:center;margin:0 0 10px;color:var(--ink)"><input id="ov" type="checkbox" style="width:auto" ${o.vat?"checked":""} onchange="oAuto()"> Add 14% VAT</label></div>
+ <div><label>Total (EGP)</label><input id="ot2" type="number" step="0.01" value="${o.total||""}"></div>
+ <div><label>Paid (EGP)</label><input id="op" type="number" step="0.01" value="${o.paid}"></div>
+ <div><label>Due date</label><input id="od" type="date" value="${o.due}"></div>
+ <div><label>Status</label><select id="os">${Object.entries(ST).map(([k,v])=>`<option value="${k}" ${k===o.status?"selected":""}>${v[0]}</option>`).join("")}</select></div></div>
+ <div class="mut" id="ohint" style="margin-top:8px"></div>
+ <div style="margin-top:12px"><label>Notes (job name, artwork file, special instructions)</label><textarea id="on" rows="2">${esc(o.notes)}</textarea></div>
+ <div class="bar" style="margin:16px 0 0"><button class="btn" onclick="orderSave('${id||""}')">Save order</button><button class="btn g" onclick="close()">Cancel</button>${id&&isAdmin()?`<button class="btn d" style="margin-inline-start:auto" onclick="orderDel('${id}')">Delete</button>`:""}</div>`);
+ if(!id)oAuto();
+}
+function oType(){$("#osz").innerHTML=sizeOpts($("#ot").value,+$("#ow").value,+$("#oh").value);oAuto()}
+function oSize(){const v=$("#osz").value;if(v!=="c"){const s=S.sizes[$("#ot").value][+v];$("#ow").value=s[0];$("#oh").value=s[1]}oAuto()}
+function oCust(){$("#osz").innerHTML=sizeOpts($("#ot").value,+$("#ow").value,+$("#oh").value);oAuto()}
+function oAuto(){const r=calc($("#ot").value,+$("#ow").value||0,+$("#oh").value||0,+$("#oq").value||0,$("#om").value,$("#ok").value,$("#of").value);
+ let t=r.total*(1-(+$("#odc").value||0)/100);if($("#ov").checked)t*=1+VAT;
+ $("#ot2").value=Math.round(t*100)/100;
+ $("#ohint").textContent="Auto price: EGP "+r.unit.toFixed(3)+" per piece"+(r.tier?" · quantity discount "+Math.round(r.tier*100)+"%":"")+". You can still edit the total manually."}
+function orderSave(id){
+ const d={prod:$("#opn").value.trim(),cid:$("#oc").value,type:$("#ot").value,w:+$("#ow").value||0,h:+$("#oh").value||0,qty:+$("#oq").value||0,mat:$("#om").value,col:$("#ok").value,fin:$("#of").value,disc:+$("#odc").value||0,pri:$("#opr").value,vat:$("#ov").checked,total:+$("#ot2").value||0,paid:+$("#op").value||0,due:$("#od").value,status:$("#os").value,notes:$("#on").value.trim()};
+ if(d.qty<=0){$("#oq").focus();return}
+ if(id)Object.assign(S.orders.find(x=>x.id===id),d);else S.orders.push(Object.assign({id:uid(),no:S.seq++,date:today()},d));
+ save();close();render()}
+function orderDel(id){if(!isAdmin())return;if(confirm("Delete this order?")){S.orders=S.orders.filter(o=>o.id!==id);save();close();render()}}
+function pay(id){const o=S.orders.find(x=>x.id===id),bal=o.total-o.paid;if(bal<=0.001){alert("This order is fully paid.");return}
+ const v=prompt("Payment amount (EGP). Balance: "+bal.toFixed(2),bal.toFixed(2));if(v===null)return;const a=+v;
+ if(!(a>0)||a>bal+0.001){alert("Enter an amount between 0 and the balance.");return}
+ o.paid=Math.round((o.paid+a)*100)/100;save();render()}
+function csv(){
+ const h=["No","Date","Customer","Type","Material","Colors","Finish","Width","Height","Qty","Total","Paid","Balance","Due","Status","Notes"];
+ const r=S.orders.map(o=>[o.no,o.date,cname(o.cid),o.type,o.mat||"",o.col||"",o.fin||"",o.w,o.h,o.qty,o.total,o.paid,Math.round((o.total-o.paid)*100)/100,o.due,ST[o.status][0],o.notes||""]);
+ const cell=v=>{v=String(v??"");if(/^[=+\-@]/.test(v))v="'"+v;return'"'+v.replace(/"/g,'""')+'"'};
+ const c=[h,...r].map(a=>a.map(cell).join(",")).join("\r\n");
+ const a=document.createElement("a");a.href="data:text/csv;charset=utf-8,"+encodeURIComponent("\ufeff"+c);a.download="orders-"+today()+".csv";a.click()}
+
+function invoice(id){
+ const o=S.orders.find(x=>x.id===id),c=S.cust.find(x=>x.id===o.cid)||{name:"-",phone:""};
+ const net=o.vat?o.total/(1+VAT):o.total,vat=o.total-net;
+ open(`<div class="inv"><div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap"><div><h2 style="margin:0">Royal Print</h2><div>2 Mohamed Fawzy Moaz St, Ezbet Saad, Sidi Gaber, Alexandria</div><div>012 81847512</div></div><div><b>Invoice #${o.no}</b><div>Date: ${o.date}</div></div></div><hr>
+ <p><b>Customer:</b> ${esc(c.name)} ${c.phone?" - "+esc(c.phone):""}</p>
+ <table><tr><th>Item</th><th>Size</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr><tr><td>${esc(o.type)}<br><small>${esc([o.mat,o.col,o.fin&&o.fin!=="None"?o.fin:""].filter(Boolean).join(" · "))}${o.notes?"<br>"+esc(o.notes):""}</small></td><td>${o.w}×${o.h} cm</td><td>${num(o.qty)}</td><td>${(net/o.qty).toFixed(3)}</td><td>${money(net)}</td></tr></table>
+ <p style="text-align:right;margin-top:14px">${o.disc?`Discount applied: ${o.disc}%<br>`:""}${o.vat?`VAT 14%: ${money(vat)}<br>`:""}Total: <b>${money(o.total)}</b><br>Paid: <b>${money(o.paid)}</b><br>Balance due: <b>${money(o.total-o.paid)}</b></p>
+ ${o.due?`<p>Delivery date: ${o.due}</p>`:""}</div>
+ <div class="bar noprint" style="margin:14px 0 0"><button class="btn" onclick="window.print()">Print</button><button class="btn g" onclick="close()">Close</button></div>`,"print");
+}
+
+document.querySelectorAll("nav [data-v]").forEach(b=>b.onclick=()=>{view=b.dataset.v;q="";fs="all";render()});
+$("#modal").onclick=e=>{if(e.target.id==="modal")close()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+$("#theme").onclick=()=>{const r=document.documentElement,d=r.dataset.theme==="dark"||(!r.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);r.dataset.theme=d?"light":"dark"};
+$("#bk").onclick=()=>{const a=document.createElement("a");a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(S));a.download="royal-print-"+today()+".json";a.click()};
+$("#rs").onclick=()=>$("#file").click();
+$("#file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.orders)||!Array.isArray(d.cust))throw 0;S=Object.assign(S,d);norm();save();render()}catch(x){alert("This file is not a valid backup.")}};r.readAsText(f);e.target.value=""};
+
+/* ---------- Authentication ---------- */
+const UK="ceaser_users_v1",UOK=/^[a-z0-9._-]{3,30}$/;
+let U=[];try{U=JSON.parse(localStorage.getItem(UK)||"[]")}catch(e){}
+const saveU=()=>{try{localStorage.setItem(UK,JSON.stringify(U))}catch(e){}};
+let me=null,fails=0,lockUntil=0;
+try{me=sessionStorage.getItem("ceaser_sess")}catch(e){}
+const isAdmin=()=>{const u=U.find(x=>x.u===me);return !!u&&u.role==="admin"};
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+const hasCrypto=()=>!!(window.crypto&&crypto.subtle);
+const newSalt=()=>hex(crypto.getRandomValues(new Uint8Array(16)));
+async function hp(p,salt){const k=await crypto.subtle.importKey("raw",new TextEncoder().encode(p),"PBKDF2",false,["deriveBits"]);return hex(await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations:150000,hash:"SHA-256"},k,256))}
+function authScreen(){
+ document.body.classList.add("locked");
+ const first=!U.length;
+ $("#auth").innerHTML=`<div class="acard"><div class="brand"><svg class="crown" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18l1.5-11-5.5 4.5L12 4 7 11.5 1.5 7z"/><rect x="3" y="19.5" width="18" height="2.2" rx="1"/></svg>Royal Print</div><div class="reg"><i></i><i></i><i></i><i></i></div>
+ <h2>${first?"Create admin account":"Sign in"}</h2><p class="mut" style="margin-top:0">${first?"First launch: choose the admin username and password.":"Enter your credentials to continue."}</p>
+ <label>Username</label><input id="au" autocomplete="username" autocapitalize="none">
+ <label style="margin-top:10px">Password</label><input id="ap" type="password" autocomplete="${first?"new-password":"current-password"}">
+ ${first?'<label style="margin-top:10px">Confirm password</label><input id="ac" type="password" autocomplete="new-password">':""}
+ <div class="neg" id="ae" style="min-height:24px;margin:8px 0"></div>
+ <button class="btn" style="width:100%" id="ago">${first?"Create account":"Sign in"}</button>${first?"":'<div style="text-align:center;margin-top:12px"><a href="#" id="afg" style="font-size:13px">Forgot password?</a></div>'}</div>`;
+ $("#auth").hidden=false;
+ $("#ago").onclick=()=>doAuth(first);
+ $("#auth").onkeydown=e=>{if(e.key==="Enter")doAuth(first)};
+ $("#au").focus();
+ const fg=$("#afg");if(fg)fg.onclick=ev=>{ev.preventDefault();if(prompt("This deletes all login accounts so you can create a new admin. Orders and customers are NOT deleted.\nType RESET to confirm:")==="RESET"){try{localStorage.removeItem(UK);sessionStorage.removeItem("ceaser_sess")}catch(e){}U=[];me=null;authScreen()}};
+}
+async function doAuth(first){
+ const u=$("#au").value.trim().toLowerCase(),p=$("#ap").value,e=$("#ae");
+ if(!hasCrypto()){e.textContent="Secure crypto is unavailable. Open this file over https or localhost.";return}
+ if(first){
+  if(!UOK.test(u)){e.textContent="Username: 3-30 letters, numbers, dot, dash or underscore.";return}
+  if(p.length<8){e.textContent="Password must be at least 8 characters.";return}
+  if(p!==$("#ac").value){e.textContent="Passwords do not match.";return}
+  const salt=newSalt();U.push({u,salt,hash:await hp(p,salt),role:"admin"});saveU();return enter(u);
+ }
+ if(Date.now()<lockUntil){e.textContent="Too many attempts. Try again in "+Math.ceil((lockUntil-Date.now())/1000)+"s.";return}
+ const rec=U.find(x=>x.u===u);
+ const ok=rec&&(await hp(p,rec.salt))===rec.hash;
+ if(!ok){if(++fails>=5){fails=0;lockUntil=Date.now()+30000}e.textContent="Wrong username or password.";return}
+ fails=0;enter(u);
+}
+function enter(u){me=u;try{sessionStorage.setItem("ceaser_sess",u)}catch(e){}
+ $("#auth").hidden=true;$("#auth").innerHTML="";document.body.classList.remove("locked");
+ $("#nu").hidden=!isAdmin();$("#rs").hidden=!isAdmin();$("#who").textContent="Signed in: "+u+" ("+(isAdmin()?"admin":"staff")+")";
+ view="dash";q="";fs="all";render();srvInit().then(pull);clearInterval(window._pt);window._pt=setInterval(pull,30000)}
+function logout(){me=null;try{sessionStorage.removeItem("ceaser_sess")}catch(e){}close();authScreen()}
+$("#lo").onclick=logout;
+
+function users(){
+ if(!isAdmin())return'<div class="empty">Admins only.</div>';
+ return`<h1>Users</h1><p class="sub">Manage who can sign in. Staff can't delete records, manage users or restore backups.</p>
+ <div class="panel"><h2>Add user</h2><div class="grid"><div><label>Username</label><input id="nu1" autocomplete="off" autocapitalize="none"></div><div><label>Password (min 8)</label><input id="np1" type="password" autocomplete="new-password"></div><div><label>Role</label><select id="nr"><option value="staff">Staff</option><option value="admin">Admin</option></select></div></div>
+ <div class="neg" id="ue" style="min-height:24px;margin:8px 0"></div><button class="btn" onclick="userAdd()">Add user</button></div>
+ <div class="panel tw"><table><tr><th>Username</th><th>Role</th><th></th></tr>${U.map(x=>`<tr><td>${esc(x.u)}${x.u===me?' <span class="mut">(you)</span>':""}</td><td>${x.role}</td><td><button class="btn g s" onclick="userPw('${x.u}')">Reset password</button> ${x.u!==me?`<button class="btn d s" onclick="userDel('${x.u}')">Delete</button>`:""}</td></tr>`).join("")}</table></div>`;
+}
+async function userAdd(){
+ if(!isAdmin())return;
+ const u=$("#nu1").value.trim().toLowerCase(),p=$("#np1").value,e=$("#ue");
+ if(!UOK.test(u)){e.textContent="Username: 3-30 letters, numbers, dot, dash or underscore.";return}
+ if(U.some(x=>x.u===u)){e.textContent="That username already exists.";return}
+ if(p.length<8){e.textContent="Password must be at least 8 characters.";return}
+ const salt=newSalt();U.push({u,salt,hash:await hp(p,salt),role:$("#nr").value});saveU();render();
+}
+async function userPw(u){
+ if(!isAdmin())return;
+ const p=prompt("New password for "+u+" (min 8 characters):");
+ if(p===null)return;if(p.length<8){alert("Password must be at least 8 characters.");return}
+ const rec=U.find(x=>x.u===u);rec.salt=newSalt();rec.hash=await hp(p,rec.salt);saveU();alert("Password updated.");
+}
+function userDel(u){
+ if(!isAdmin()||u===me)return;
+ if(confirm("Delete user "+u+"?")){U=U.filter(x=>x.u!==u);saveU();render()}
+}
+
+/* ---------- Customer requests, reports, exports ---------- */
+const BR={url:"https://api.baserow.io",table:1332623},IK="ceaser_requests_v1",API=true;
+let AK="",SYNC=false;try{AK=localStorage.getItem("br_admin")||""}catch(e){}
+let LE="";
+async function br(m,p,b,t){
+ if(!AK){if(window._ask)return null;window._ask=1;AK=(prompt("Paste your Baserow ADMIN token:")||"").trim().replace(/^Token\s+/i,"");if(!AK){LE="no token entered";return null}try{localStorage.setItem("br_admin",AK)}catch(e){}}
+ try{const r=await fetch(BR.url+"/api/database/rows/table/"+(t||BR.table)+p+(p.includes("?")?"&":"?")+"user_field_names=true",{method:m,headers:{Authorization:"Token "+AK,"Content-Type":"application/json"},body:b?JSON.stringify(b):undefined});
+  if(r.status===401){AK="";try{localStorage.removeItem("br_admin")}catch(e){}LE="invalid token (401), press Refresh to enter it again";return null}
+  if(!r.ok){LE="error "+r.status+(r.status===404?": wrong table or no access":r.status===400?": field names do not match":"");return null}
+  LE="";return r.status===204?{}:await r.json()}catch(e){LE="network / CORS error";return null}}
+function sy(ok){const e=$("#sy");if(e)e.textContent=ok===false?"● Baserow: "+(LE||"problem"):ok?"● Connected to Baserow":"● Baserow: not connected"}
+function push(){}
+async function srvInit(){}
+const PN=["Round Sticker","Square Sticker","Rectangle Sticker","Transparent Sticker","Die-cut Sticker","Standard Hang Tag","Large Hang Tag","Kraft Hang Tag","Premium Foil Hang Tag"];
+const MM={"Glossy paper":"Glossy coated","Matte paper":"Matte coated","PVC vinyl":"PVC vinyl","Transparent film":"Transparent","Art card":"Art paper","Kraft card":"Kraft"};
+const fin=o=>o.status==="ready"||o.status==="done";
+const waLink=p=>{let d=String(p||"").replace(/\D/g,"");if(d.startsWith("00"))d=d.slice(2);else if(d[0]==="0")d="20"+d.slice(1);return"https://wa.me/"+d};
+let rf="",rt="";
+function badge(){const n=S.reqs.filter(r=>r.status==="new").length;const e=$("#rb");if(e)e.textContent=n||"";document.title=(n?"("+n+") ":"")+"Royal Print | Print Shop Manager"}
+async function pull(){
+ let inc=[];try{inc=JSON.parse(localStorage.getItem(IK)||"[]");localStorage.removeItem(IK)}catch(e){}
+ const j=await br("GET","/?filter__Status__equal=new&size=200");sy(!!j);
+ if(j&&j.results)j.results.forEach(w=>{try{inc.push({id:"br"+w.id,rowId:w.id,code:w.Code,at:new Date().toISOString(),lang:w.Lang,c:{name:w.Name,phone:w.Phone,email:w.Email,addr:w.Address,notes:w.Notes},items:JSON.parse(w.Items)})}catch(e){}})
+ let n=0;inc.forEach(r=>{if(r&&r.id&&!S.reqs.some(x=>x.id===r.id)){r.status="new";S.reqs.push(r);n++}});
+ if(n)save();badge();if(n&&(view==="dash"||view==="reqs"))render();
+}
+const cloudSet=r=>{if(r.rowId)br("PATCH","/"+r.rowId+"/",{Status:r.status})};
+function reqSet(id,st){const r=S.reqs.find(x=>x.id===id);r.status=st;save();cloudSet(r);badge();render()}
+function convReq(id){
+ const r=S.reqs.find(x=>x.id===id),ph=r.c.phone.replace(/\D/g,"");
+ let c=S.cust.find(x=>(x.phone||"").replace(/\D/g,"")===ph);
+ if(!c){c={id:uid(),name:r.c.name,phone:r.c.phone,email:r.c.email||"",addr:r.c.addr||""};S.cust.push(c)}
+ r.nos=r.items.map(i=>{
+  const wh=(i.size.match(/[\d.]+/g)||[0,0]).map(Number),type=i.k==="stk"?"Sticker":"Hang tag",mat=S.mats[i.mat]?i.mat:(MM[i.mat]||"Art paper"),fn=S.fin[i.fin]!==undefined?i.fin:"None";
+  const o={id:uid(),no:S.seq++,date:today(),cid:c.id,type,prod:i.name,w:wh[0]||0,h:wh[1]||0,qty:i.qty,mat,col:"CMYK",fin:fn,disc:0,pri:"normal",vat:false,paid:0,due:"",status:"new",src:"web",notes:"Web request "+r.code+(i.size.includes("×")?"":" (custom shape)")+(r.c.notes?" · "+r.c.notes:"")};
+  o.total=Math.round(calc(type,o.w,o.h,o.qty,mat,"CMYK",fn).total*100)/100;S.orders.push(o);return o.no});
+ r.status="converted";save();cloudSet(r);badge();render();
+}
+function reqs(){
+ const l=[...S.reqs].sort((a,b)=>b.at.localeCompare(a.at)),TG={new:["New","s-new"],contacted:["Contacted","s-prod"],converted:["Converted","s-ready"],dismissed:["Dismissed","s-done"]};
+ return`<h1>Customer requests</h1><p class="sub">Orders placed from the customer page. Contact the customer, then convert the request into production orders. New orders placed on the customer page arrive here automatically from Baserow.</p>
+ <div class="bar noprint"><button class="btn g" onclick="window._ask=0;pull().then(render)">Refresh</button></div>
+ ${l.map(r=>{const t=TG[r.status]||TG.new;return`<div class="panel"><div class="bar" style="margin-bottom:8px"><b>${esc(r.code)}</b><span class="mut">${esc(r.at.slice(0,16).replace("T"," "))}</span><span class="tag ${t[1]}">${t[0]}${r.nos?" #"+r.nos.join(", #"):""}</span></div>
+ <div><b>${esc(r.c.name)}</b> · <a href="${waLink(r.c.phone)}" target="_blank" rel="noopener">${esc(r.c.phone)}</a>${r.c.email?" · "+esc(r.c.email):""}${r.c.addr?"<div class=\"mut\">"+esc(r.c.addr)+"</div>":""}${r.c.notes?"<div class=\"mut\">Notes: "+esc(r.c.notes)+"</div>":""}</div>
+ <div class="tw"><table><tr><th>Product</th><th>Size</th><th>Material</th><th>Finish</th><th>Qty</th></tr>${r.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${esc(i.size)}</td><td>${esc(i.mat)}</td><td>${esc(i.fin)}</td><td>${num(i.qty)}</td></tr>`).join("")}</table></div>
+ <div class="bar noprint" style="margin:10px 0 0"><a class="btn g s" href="${waLink(r.c.phone)}" target="_blank" rel="noopener">WhatsApp</a>${r.status==="new"?`<button class="btn g s" onclick="reqSet('${r.id}','contacted')">Mark contacted</button>`:""}${r.status==="new"||r.status==="contacted"?`<button class="btn s" onclick="convReq('${r.id}')">Convert to order(s)</button><button class="btn g s" onclick="reqSet('${r.id}','dismissed')">Dismiss</button>`:""}</div></div>`}).join("")||'<div class="panel empty">No requests yet.</div>'}`;
+}
+function prodRows(l){
+ const m={};l.forEach(o=>{const k=o.prod||o.type,p=m[k]=m[k]||{n:k,o:0,q:0,nw:0,pr:0,rd:0,dn:0,rev:0};p.o++;p.q+=o.qty;p.rev+=o.total;p[{new:"nw",prod:"pr",ready:"rd",done:"dn"}[o.status]]++});
+ return Object.values(m).map(p=>({...p,pct:Math.round((p.rd+p.dn)/p.o*100)})).sort((a,b)=>b.o-a.o);
+}
+const pbar=n=>`<span class="pbar"><i style="width:${n}%"></i></span> ${n}%`;
+const prodTbl=p=>`<div class="tw"><table><tr><th>Product</th><th>Orders</th><th>Qty</th><th>New</th><th>In production</th><th>Ready</th><th>Delivered</th><th>Progress</th><th>State</th><th>Revenue</th></tr>${p.map(x=>`<tr><td>${esc(x.n)}</td><td>${x.o}</td><td>${num(x.q)}</td><td>${x.nw}</td><td>${x.pr}</td><td>${x.rd}</td><td>${x.dn}</td><td>${pbar(x.pct)}</td><td>${x.pct===100?'<span class="tag s-ready">Finished</span>':'<span class="tag s-prod">Not yet ('+(x.o-x.rd-x.dn)+' left)</span>'}</td><td>${money(x.rev)}</td></tr>`).join("")||'<tr><td colspan="10" class="mut">No data</td></tr>'}</table></div>`;
+const sentTbl=l=>`<div class="tw"><table><tr><th>No.</th><th>Customer</th><th>Product</th><th>Qty</th><th>Sent on</th></tr>${l.map(o=>`<tr><td>#${o.no}</td><td>${esc(cname(o.cid))}</td><td>${esc(o.prod||o.type)}</td><td>${num(o.qty)}</td><td>${o.sentAt||"-"}</td></tr>`).join("")||'<tr><td colspan="5" class="mut">Nothing sent yet</td></tr>'}</table></div>`;
+const exBar=`<div class="bar noprint"><button class="btn" onclick="xl()">Download Excel</button><button class="btn g" onclick="pdf()">Download PDF</button></div>`;
+function dash(){
+ let d=dash0();const nw=S.reqs.filter(r=>r.status==="new").length,sent=S.orders.filter(o=>o.status==="done").sort((a,b)=>(b.sentAt||"").localeCompare(a.sentAt||""));
+ const ban=nw?`<div class="panel" style="border-inline-start:5px solid var(--m);display:flex;gap:12px;align-items:center;flex-wrap:wrap"><b>${nw} new customer request${nw>1?"s":""}</b><button class="btn s" onclick="view='reqs';render()">Open requests</button></div>`:"";
+ const k2=`<div class="kpis"><div class="kpi"><b>${sent.length}</b><span>Sent / delivered orders</span></div><div class="kpi"><b>${S.cust.length}</b><span>Customers</span></div><div class="kpi"><b>${nw}</b><span>New web requests</span></div></div>`;
+ const i=d.indexOf('<div class="kpis">'),j=d.indexOf('<div class="two">');
+ return d.slice(0,i)+ban+d.slice(i,j)+k2+d.slice(j)+exBar+`<div class="panel"><h2>Products: finished or not</h2>${prodTbl(prodRows(S.orders))}</div><div class="panel"><h2>Sent orders</h2>${sentTbl(sent.slice(0,10))}</div>`;
+}
+function repData(){const l=S.orders.filter(o=>(!rf||o.date>=rf)&&(!rt||o.date<=rt));return{l,p:prodRows(l)}}
+function repTables(){
+ const{l,p}=repData();
+ return`<h2>Products: finished or not</h2>${prodTbl(p)}<h2 style="margin-top:18px">Orders detail</h2><div class="tw"><table><tr><th>No.</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Status</th><th>Finished?</th><th>Sent on</th></tr>${[...l].sort((a,b)=>(a.prod||a.type).localeCompare(b.prod||b.type)||a.no-b.no).map(o=>`<tr><td>#${o.no}</td><td>${o.date}</td><td>${esc(cname(o.cid))}</td><td>${esc(o.prod||o.type)}</td><td>${num(o.qty)}</td><td>${tag(o)}</td><td class="${fin(o)?"pos":"neg"}">${fin(o)?"Yes":"No"}</td><td>${o.sentAt||"-"}</td></tr>`).join("")||'<tr><td colspan="8" class="mut">No orders</td></tr>'}</table></div>
+ <h2 style="margin-top:18px">Customers</h2><div class="tw"><table><tr><th>Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Orders</th><th>Finished</th><th>Sent</th><th>Balance</th></tr>${S.cust.map(c=>{const os=l.filter(o=>o.cid===c.id);return`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${esc(c.email||"")}</td><td>${esc(c.addr||"")}</td><td>${os.length}</td><td>${os.filter(fin).length}</td><td>${os.filter(o=>o.status==="done").length}</td><td>${money(os.reduce((a,o)=>a+o.total-o.paid,0))}</td></tr>`}).join("")||'<tr><td colspan="8" class="mut">No customers</td></tr>'}</table></div>`;
+}
+function reports(){
+ return`<h1>Reports</h1><p class="sub">Every product: finished or not, per order and per customer.</p><div class="bar noprint"><label style="margin:0">From</label><input type="date" style="width:auto" value="${rf}" onchange="rf=this.value;render()"><label style="margin:0">To</label><input type="date" style="width:auto" value="${rt}" onchange="rt=this.value;render()"><button class="btn" onclick="xl()">Download Excel</button><button class="btn g" onclick="pdf()">Download PDF</button></div><div class="panel">${repTables()}</div>`;
+}
+function xl(){
+ if(!window.XLSX){alert("Excel library did not load. Check your internet connection.");return}
+ const{l,p}=repData(),wb=XLSX.utils.book_new(),add=(n,a)=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(a),n);
+ add("Products",p.map(x=>({Product:x.n,Orders:x.o,Qty:x.q,New:x.nw,"In production":x.pr,Ready:x.rd,Delivered:x.dn,"Finished %":x.pct,State:x.pct===100?"Finished":"Not finished",Revenue:x.rev})));
+ add("Orders",l.map(o=>({No:o.no,Date:o.date,Customer:cname(o.cid),Product:o.prod||o.type,Type:o.type,Qty:o.qty,Total:o.total,Paid:o.paid,Balance:Math.round((o.total-o.paid)*100)/100,Status:ST[o.status][0],Finished:fin(o)?"Yes":"No","Sent on":o.sentAt||"",Due:o.due||""})));
+ add("Customers",S.cust.map(c=>{const os=l.filter(o=>o.cid===c.id);return{Name:c.name,Phone:c.phone,Email:c.email||"",Address:c.addr||"",Orders:os.length,Finished:os.filter(fin).length,Sent:os.filter(o=>o.status==="done").length,Balance:Math.round(os.reduce((a,o)=>a+o.total-o.paid,0)*100)/100}}));
+ add("Web requests",S.reqs.map(r=>({Code:r.code,Date:r.at.slice(0,16).replace("T"," "),Name:r.c.name,Phone:r.c.phone,Email:r.c.email||"",Address:r.c.addr||"",Items:r.items.map(i=>i.name+" "+i.size+" x"+i.qty).join(" | "),Status:r.status})));
+ XLSX.writeFile(wb,"report-"+today()+".xlsx");
+}
+function pdf(){
+ open(`<div class="inv"><h2 style="margin:0">Royal Print - Report</h2><div>${today()}${rf||rt?" · "+(rf||"...")+" to "+(rt||"..."):""}</div>${repTables()}</div><div class="bar noprint" style="margin:14px 0 0"><button class="btn" onclick="window.print()">Print / Save as PDF</button><button class="btn g" onclick="close()">Close</button></div>`,"print wide");
+ setTimeout(()=>window.print(),300);
+}
+addEventListener("storage",e=>{if(e.key===IK&&me)pull()});
+
+
+/* ---------- Product catalog (shown automatically on customer.html) ---------- */
+const BRP=1334514; // Baserow "Products" table id. Put the same number in customer.html (CAT.table)
+let CATROWS=null;
+async function catLoad(){const j=await br("GET","/?size=200",null,BRP);CATROWS=j&&j.results?j.results:[];if(!j)alert("Could not load products: "+(LE||"unknown error"));if(view==="catalog")render()}
+const catOff=w=>String(w.Active).toLowerCase()==="no";
+function catalog(){
+ if(!BRP)return`<h1>Product catalog</h1><div class="panel">Create the <b>Products</b> table in Baserow, then set <b>BRP</b> (its table id) in this file and <b>CAT.table</b> in customer.html.</div>`;
+ if(CATROWS===null){catLoad();return`<h1>Product catalog</h1><div class="panel empty">Loading...</div>`}
+ const row=w=>`<tr><td><i style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${esc(w.Color||"#999")}"></i></td><td>${esc(w.Name)}</td><td>${esc(w.NameAr)}</td><td>${w.Kind==="tag"?"Hang tag":"Sticker"}</td><td>${esc(w.Sizes)}</td><td>${esc(w.Materials)}</td><td>${esc(w.Finishes)}</td><td>${catOff(w)?'<span class="tag s-done">Hidden</span>':'<span class="tag s-ready">Visible</span>'}</td><td><button class="btn g s" onclick="catForm(${w.id})">Edit</button> <button class="btn g s" onclick="catAct(${w.id},${catOff(w)?1:0})">${catOff(w)?"Show":"Hide"}</button>${isAdmin()?` <button class="btn d s" onclick="catDel(${w.id})">Delete</button>`:""}</td></tr>`;
+ return`<h1>Product catalog</h1><p class="sub">Products you add here appear automatically on the customer page.</p>
+ <div class="bar noprint"><button class="btn" onclick="catForm()">+ New product</button><button class="btn g" onclick="CATROWS=null;render()">Refresh</button></div>
+ <div class="panel tw">${CATROWS.length?`<table><tr><th></th><th>Name</th><th>Arabic</th><th>Type</th><th>Sizes</th><th>Materials</th><th>Finishes</th><th>On website</th><th></th></tr>${CATROWS.map(row).join("")}</table>`:'<div class="empty">No products yet. Add your first one.</div>'}</div>`;
+}
+function catForm(id){
+ const w=CATROWS.find(x=>x.id===id)||{Kind:"stk",Shape:"rect",Style:"normal",Color:"#2b3a9e"},sl=(v,c)=>v===c?"selected":"";
+ open(`<h2>${id?"Edit product":"New product"}</h2><div class="grid">
+ <div><label>Name (English)</label><input id="pn" value="${esc(w.Name||"")}"></div>
+ <div><label>Name (Arabic)</label><input id="pa" dir="rtl" value="${esc(w.NameAr||"")}"></div>
+ <div><label>Type</label><select id="pk"><option value="stk" ${sl("stk",w.Kind)}>Sticker</option><option value="tag" ${sl("tag",w.Kind)}>Hang tag</option></select></div>
+ <div><label>Shape</label><select id="psh"><option value="circle" ${sl("circle",w.Shape)}>Sticker: circle</option><option value="square" ${sl("square",w.Shape)}>Sticker: square</option><option value="rect" ${sl("rect",w.Shape)}>Sticker: rectangle</option><option value="blob" ${sl("blob",w.Shape)}>Sticker: custom shape</option><option value="std" ${sl("std",w.Shape)}>Hang tag: standard</option><option value="wide" ${sl("wide",w.Shape)}>Hang tag: wide</option></select></div>
+ <div><label>Style</label><select id="pst"><option value="normal" ${sl("normal",w.Style)}>Normal</option><option value="transparent" ${sl("transparent",w.Style)}>Transparent (stickers)</option><option value="kraft" ${sl("kraft",w.Style)}>Kraft (tags)</option><option value="foil" ${sl("foil",w.Style)}>Foil (tags)</option></select></div>
+ <div><label>Preview color</label><input id="pc" type="color" value="${esc(w.Color||"#2b3a9e")}" style="height:40px;padding:3px"></div>
+ <div style="grid-column:1/-1"><label>Description (English)</label><input id="pd" value="${esc(w.Description||"")}"></div>
+ <div style="grid-column:1/-1"><label>Description (Arabic)</label><input id="pda" dir="rtl" value="${esc(w.DescriptionAr||"")}"></div>
+ <div style="grid-column:1/-1"><label>Sizes in cm, separated by commas</label><input id="pz" placeholder="5×3, 7×5, 10×5" value="${esc(w.Sizes||"")}"></div>
+ <div style="grid-column:1/-1"><label>Materials, separated by commas</label><input id="pmt" list="pml" placeholder="Glossy paper, Matte paper" value="${esc(w.Materials||"")}"><datalist id="pml">${["Glossy paper","Matte paper","PVC vinyl","Transparent film","Art card","Kraft card"].map(x=>`<option>${x}</option>`).join("")}</datalist></div>
+ <div style="grid-column:1/-1"><label>Finishes, separated by commas</label><input id="pfn" list="pfl" placeholder="Varnish, Lamination" value="${esc(w.Finishes||"")}"><datalist id="pfl">${["Varnish","Lamination","Die-cut","Foil"].map(x=>`<option>${x}</option>`).join("")}</datalist></div></div>
+ <div class="bar" style="margin:16px 0 0"><button class="btn" onclick="catSave(${id||0})">Save product</button><button class="btn g" onclick="close()">Cancel</button></div>`);
+}
+async function catSave(id){
+ const g=s=>$(s).value.trim(),name=g("#pn");if(!name){$("#pn").focus();return}
+ const old=CATROWS.find(x=>x.id===id)||{};
+ const row={Name:name,NameAr:g("#pa"),Kind:g("#pk"),Shape:g("#psh"),Style:g("#pst"),Color:$("#pc").value,Description:g("#pd"),DescriptionAr:g("#pda"),Sizes:g("#pz").replace(/(\d)\s*[xX*]\s*(\d)/g,"$1×$2"),Materials:g("#pmt"),Finishes:g("#pfn"),Active:old.Active||"yes"};
+ const r=id?await br("PATCH","/"+id+"/",row,BRP):await br("POST","/",row,BRP);
+ if(!r){alert("Could not save: "+(LE||"unknown error"));return}
+ close();CATROWS=null;render();
+}
+async function catAct(id,on){const r=await br("PATCH","/"+id+"/",{Active:on?"yes":"no"},BRP);if(!r)alert("Could not update: "+(LE||"unknown error"));CATROWS=null;render()}
+async function catDel(id){if(!isAdmin())return;if(!confirm("Delete this product from the website?"))return;const r=await br("DELETE","/"+id+"/",null,BRP);if(!r)alert("Could not delete: "+(LE||"unknown error"));CATROWS=null;render()}
+
+if(me&&U.some(x=>x.u===me))enter(me);else authScreen();
+</script>
+</body>
+</html>
